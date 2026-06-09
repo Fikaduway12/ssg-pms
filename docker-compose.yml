@@ -1,0 +1,34 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    container_name: ssg_pms_db
+    restart: always
+    environment:
+      POSTGRES_DB: ssgpms
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    container_name: ssg_pms_backend
+    restart: always
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+  frontend:
+    build: ./frontend
+    container_name: ssg_pms_frontend
+    restart: always
+    ports:
+      - "3000:3000"
+
+volumes:
+  postgres_data:
