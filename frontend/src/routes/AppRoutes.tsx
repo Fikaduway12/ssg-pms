@@ -1,92 +1,59 @@
-import React from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import MainLayout from '../layouts/MainLayout';
 
-// Lazy load components for better performance
-const Login = React.lazy(() => import('../pages/Login'));
-const Dashboard = React.lazy(() => import('../pages/Dashboard'));
-const Users = React.lazy(() => import('../pages/Users'));
-const Tasks = React.lazy(() => import('../pages/Tasks'));
-const Reports = React.lazy(() => import('../pages/Reports'));
-const NotFound = React.lazy(() => import('../pages/NotFound'));
+// Lazy load components
+const Login = lazy(() => import('../pages/Login'));
+const Dashboard = lazy(() => import('../pages/Dashboard'));
+const Projects = lazy(() => import('../pages/Projects'));
+const Tasks = lazy(() => import('../pages/Tasks'));
+const Team = lazy(() => import('../pages/Team'));
+const Reports = lazy(() => import('../pages/Reports'));
+const Documents = lazy(() => import('../pages/Documents'));
+const Calendar = lazy(() => import('../pages/Calendar'));
+const Settings = lazy(() => import('../pages/Settings'));
+const NotFound = lazy(() => import('../pages/NotFound'));
 
-// Protected Route wrapper component
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
-  
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-  
-  return <>{children}</>;
-};
+  return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
+}
 
-const AppRoutes: React.FC = () => {
+export default function AppRoutes() {
   const { isAuthenticated } = useAuth();
 
   return (
-    <React.Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div style={styles.loading}>Loading...</div>}>
       <Routes>
-        {/* Public routes */}
-        <Route 
-          path="/login" 
-          element={
-            !isAuthenticated ? <Login /> : <Navigate to="/dashboard" replace />
-          } 
-        />
+        <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/dashboard" replace />} />
         
-        {/* Protected routes */}
-        <Route 
-          path="/dashboard" 
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          } 
-        />
+        {/* Protected routes with MainLayout */}
+        <Route path="/" element={<ProtectedRoute><MainLayout /></ProtectedRoute>}>
+          <Route index element={<Navigate to="/dashboard" replace />} />
+          <Route path="dashboard" element={<Dashboard />} />
+          <Route path="projects" element={<Projects />} />
+          <Route path="tasks" element={<Tasks />} />
+          <Route path="team" element={<Team />} />
+          <Route path="reports" element={<Reports />} />
+          <Route path="documents" element={<Documents />} />
+          <Route path="calendar" element={<Calendar />} />
+          <Route path="settings" element={<Settings />} />
+        </Route>
         
-        <Route 
-          path="/users" 
-          element={
-            <ProtectedRoute>
-              <Users />
-            </ProtectedRoute>
-          } 
-        />
-        
-        <Route 
-          path="/tasks" 
-          element={
-            <ProtectedRoute>
-              <Tasks />
-            </ProtectedRoute>
-          } 
-        />
-        
-        <Route 
-          path="/reports" 
-          element={
-            <ProtectedRoute>
-              <Reports />
-            </ProtectedRoute>
-          } 
-        />
-        
-        {/* Redirect root to dashboard or login */}
-        <Route 
-          path="/" 
-          element={
-            isAuthenticated ? 
-            <Navigate to="/dashboard" replace /> : 
-            <Navigate to="/login" replace />
-          } 
-        />
-        
-        {/* 404 route */}
         <Route path="*" element={<NotFound />} />
       </Routes>
-    </React.Suspense>
+    </Suspense>
   );
-};
+}
 
-export default AppRoutes;
+const styles = {
+  loading: {
+    display: 'flex',
+    justifyContent: 'center',
+    alignItems: 'center',
+    height: '100vh',
+    fontSize: '18px',
+    color: '#667eea',
+  },
+};
